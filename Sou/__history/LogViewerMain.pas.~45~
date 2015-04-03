@@ -1,0 +1,421 @@
+unit LogViewerMain;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, ComCtrls, TabNotBk, ImgList, ToolWin, ExtCtrls, StdCtrls,About,StrUtils,MemoSearch,
+  Buttons;
+
+type
+  TForm12 = class(TForm)
+    ToolBar1: TToolBar;
+    TbtnOpen: TToolButton;
+    ImageList1: TImageList;
+    Timer1: TTimer;
+    FontDialog1: TFontDialog;
+    FindDialog1: TFindDialog;
+    ColorDialog1: TColorDialog;
+    OpenDialog1: TOpenDialog;
+    TbtnRefresh: TToolButton;
+    ImageList2: TImageList;
+    PageControl1: TPageControl;
+    TabSheet1: TTabSheet;
+    ToolButton1: TToolButton;
+    tbtnClose: TToolButton;
+    btnAbout: TToolButton;
+    GroupBox1: TGroupBox;
+    Label1: TLabel;
+    edtfind: TEdit;
+    btnfind: TBitBtn;
+    procedure TbtnOpenClick(Sender: TObject);
+    procedure Timer1Timer(Sender: TObject);
+    procedure TbtnRefreshClick(Sender: TObject);
+    procedure FindDialog1Find(Sender: TObject);
+    procedure ToolButton1Click(Sender: TObject);
+    procedure PageControl1Change(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure tbtnCloseClick(Sender: TObject);
+    procedure btnAboutClick(Sender: TObject);
+    procedure btnfindClick(Sender: TObject);
+  private
+    FLastLogLine: Integer;
+    Frefresh:Boolean;
+    FLogFile:string;
+    fcurrentmemo:TMemo;
+    FfirstLoad:Boolean;
+    FSelPos:Integer;
+    procedure ProcessLogFile(currentmemo:TMemo);
+    procedure MemoKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+  public
+    { Public declarations }
+  end;
+
+
+type
+  TSearchOption = (soIgnoreCase, soFromStart, soWrap);
+  TSearchOptions = set of TSearchOption;
+
+function SearchText(
+    Control: TCustomEdit; 
+    Search: string; 
+    SearchOptions: TSearchOptions): Boolean;
+
+procedure SelectMemoLine(Memo : TCustomMemo) ;
+function MyPos(stringtofind, stringtosearch: string; CaseInsensitive:
+boolean = true): integer;
+
+var
+  Form12: TForm12;
+
+implementation
+
+{$R *.dfm}
+
+procedure TForm12.TbtnOpenClick(Sender: TObject);
+var
+activeidx:Integer;
+i:Integer;
+begin
+activeidx:=PageControl1.ActivePageIndex;
+if OpenDialog1.Execute then
+begin
+
+  FLogFile:=OpenDialog1.FileName;
+  PageControl1.Pages[activeidx].Caption:=FLogFile;
+
+
+  for I := Form12.PageControl1.Pages[activeidx].ComponentCount-1 downto 0 do
+  begin
+  if (Form12.PageControl1.Pages[activeidx].Components[i] is TMemo)  then
+  fcurrentmemo:=Form12.PageControl1.Pages[activeidx].Components[i] as TMemo;
+  fcurrentmemo.Lines.Clear;
+
+  end;
+  Timer1.Enabled:=True;
+  FfirstLoad:=True;
+end;
+
+end;
+
+
+procedure TForm12.TbtnRefreshClick(Sender: TObject);
+begin
+if Timer1.Enabled then
+begin
+ Timer1.Enabled:=False;
+ TbtnRefresh.Down:=False;
+end else
+begin
+ Timer1.Enabled:=True;
+ TbtnRefresh.Down:=True;
+ end;
+end;
+
+procedure TForm12.btnAboutClick(Sender: TObject);
+begin
+AboutBox.ShowModal;
+end;
+
+
+
+
+{
+The following OnFind event handler searches a memo component
+for the text specified in the FindText property of a find
+dialog component. If found, the first occurrence of the text
+in Memo1 is selected. The code uses the Pos function to
+compare strings, and stores the number of characters to skip
+when determining the selection position in the SkipChars
+variable. Because there is no handling of case, whole word,
+or search direction in this algorithm, it is assumed that
+the Options property of FindDialog1 is set to
+[frHideMatchCase, frHideWholeWord, frHideUpDown].
+}
+
+
+procedure TForm12.btnfindClick(Sender: TObject);
+begin
+  SearchText(fcurrentmemo,edtfind.Text,[]);
+
+end;
+
+procedure TForm12.FindDialog1Find(Sender: TObject);
+var
+Soptions:TSearchOptions;
+begin
+ {
+ with Sender as TFindDialog do
+  begin
+   GetMem(FT, Length(FindText) + 1);
+   fcurrentmemo.GetTextBuf(Buff, BuffLen);
+   StrPCopy(FT, FindText);
+   BuffLen := fcurrentmemo.GetTextLen + 1;
+   GetMem(Buff, BuffLen);
+   P := Buff + fcurrentmemo.SelStart + fcurrentmemo.SelLength;
+   P := mypos(string(P), string(FT));
+   if P = NIL then MessageBeep(0)
+   else
+    begin
+     fcurrentmemo.SelStart := P - Buff;
+     fcurrentmemo.SelLength := Length(FindText);
+    end;
+    FreeMem(FT, Length(FindText) + 1);
+    FreeMem(Buff, BuffLen);
+  end;
+   }
+   if (frMatchCase in FindDialog1.Options) then
+   begin
+      Soptions:=Soptions - [soIgnoreCase];
+
+   end else begin
+      Soptions:=Soptions + [soIgnoreCase];
+
+   end;
+
+   // Soptions:=Soptions + [soFromStart];
+    Soptions:=Soptions + [soWrap];
+   SearchText(fcurrentmemo,FindDialog1.FindText,Soptions);
+
+end;
+
+procedure TForm12.FormCreate(Sender: TObject);
+var
+  TabSheet: TTabSheet;
+  newmemo:TMemo;
+  count:Integer;
+begin
+
+   newmemo:=TMemo.Create(PageControl1.Pages[0]);
+   newmemo.Parent:=PageControl1.Pages[0];
+   newmemo.Align:=alClient;
+   newmemo.Color:=clCream;
+   newmemo.Lines.Clear;
+   newmemo.WordWrap:=False;
+   newmemo.ScrollBars:=ssBoth;
+   newmemo.HideSelection:=False;
+   newmemo.OnKeyDown:=MemoKeyDown;
+   fcurrentmemo:=newmemo;
+  FLogFile:=OpenDialog1.FileName;
+  Timer1.Enabled:=True;
+
+
+end;
+
+procedure TForm12.MemoKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+ if (Shift = [ssCtrl]) and ((Key = ord('f')) or (Key = ord('F'))) then
+    begin
+     FSelPos := 0;
+     // FindDialog1.Execute();
+     frmsearch.ShowModal;
+    end;
+end;
+
+procedure TForm12.PageControl1Change(Sender: TObject);
+var
+activeidx:Integer;
+i:Integer;
+begin
+activeidx:=PageControl1.ActivePageIndex;
+for I := Form12.PageControl1.Pages[activeidx].ComponentCount-1 downto 0 do
+begin
+ if (Form12.PageControl1.Pages[activeidx].Components[i] is TMemo)  then
+  fcurrentmemo:=Form12.PageControl1.Pages[activeidx].Components[i] as TMemo;
+
+end;
+FLogFile:=PageControl1.Pages[activeidx].Caption;
+
+//fcurrentmemo:=
+end;
+
+procedure TForm12.ProcessLogFile(currentmemo:TMemo);
+var
+  Log: TStringList;
+  LogStream: TFileStream;
+  i: Integer;
+begin
+  Log := TStringList.Create;
+  try
+    if not FileExists(FLogFile) then
+    begin
+     Exit;
+    end;
+
+    LogStream := TFileStream.Create(FLogFile,fmOpenRead or fmShareDenyNone);
+    try
+      Log.LoadFromStream(LogStream);
+
+      if FfirstLoad then
+      begin
+       LogStream.Seek(0,0);
+       currentmemo.Lines.LoadFromStream(LogStream);
+     //   SelectMemoLine(currentmemo);
+      // currentmemo.Lines.LoadFromFile(FLogFile);
+      end else
+      begin
+       while Log.Count > currentmemo.Lines.Count do
+       currentmemo.Lines.Append(Log[currentmemo.Lines.Count]);
+
+      end;
+    finally
+    LogStream.Free;
+    end;
+  finally
+
+    Log.Free;
+
+
+  end;
+
+end;
+
+procedure TForm12.tbtnCloseClick(Sender: TObject);
+var
+activeidx:Integer;
+i:Integer;
+count:Integer;
+begin
+activeidx:=PageControl1.ActivePageIndex;
+count:=PageControl1.PageCount;
+
+if (activeidx=0) then Exit;
+
+if (activeidx <(count-1))  then
+begin
+PageControl1.ActivePage.Free;
+
+for I := Form12.PageControl1.Pages[activeidx].ComponentCount-1 downto 0 do
+begin
+ if (Form12.PageControl1.Pages[activeidx].Components[i] is TMemo)  then
+  fcurrentmemo:=Form12.PageControl1.Pages[activeidx].Components[i] as TMemo;
+end;
+
+FLogFile:=PageControl1.Pages[activeidx].Caption;
+
+end else begin
+PageControl1.ActivePage.Free;
+
+for I := Form12.PageControl1.Pages[activeidx-1].ComponentCount-1 downto 0 do
+begin
+ if (Form12.PageControl1.Pages[activeidx-1].Components[i] is TMemo)  then
+  fcurrentmemo:=Form12.PageControl1.Pages[activeidx-1].Components[i] as TMemo;
+end;
+
+FLogFile:=PageControl1.Pages[activeidx-1].Caption;
+
+
+end;
+
+end;
+
+procedure TForm12.Timer1Timer(Sender: TObject);
+begin
+  Timer1.Enabled := False;
+  try
+    ProcessLogFile(fcurrentmemo);
+  finally
+    Timer1.Enabled := True;
+  end;
+  FfirstLoad:=False;
+end;
+
+
+procedure TForm12.ToolButton1Click(Sender: TObject);
+ var
+  TabSheet: TTabSheet;
+  newmemo:TMemo;
+  count:Integer;
+begin
+if OpenDialog1.Execute then
+begin
+count:=PageControl1.PageCount+1;
+  TabSheet := TTabSheet.Create(PageControl1);
+
+  TabSheet.Caption := OpenDialog1.FileName;
+  TabSheet.PageControl := PageControl1;
+  PageControl1.ActivePage:=TabSheet;
+   newmemo:=TMemo.Create(TabSheet);
+   newmemo.Parent:=TabSheet;
+   newmemo.Align:=alClient;
+   newmemo.Color:=clCream;
+   newmemo.Lines.Clear;
+   newmemo.ScrollBars:=ssBoth;
+   newmemo.WordWrap:=False;
+   newmemo.HideSelection:=False;
+   newmemo.OnKeyDown:=MemoKeyDown;
+   fcurrentmemo:=newmemo;
+  FLogFile:=OpenDialog1.FileName;
+  Timer1.Enabled:=True;
+  FfirstLoad:=True;
+end;
+
+end;
+
+
+procedure SelectMemoLine(Memo : TCustomMemo) ;
+var
+   Line : integer;
+begin
+   with Memo do
+   begin
+     Line := Perform(EM_LINEFROMCHAR, SelStart, 0) ;
+     SelStart := Perform(EM_LINEINDEX, Line, 0);
+   SelLength := Length(Lines[Line]) ;
+   end;
+
+   end;
+
+
+
+function MyPos(stringtofind, stringtosearch: string; CaseInsensitive:
+boolean = true): integer;
+begin
+  if CaseInsensitive then
+  begin
+    stringtofind := LowerCase(stringtofind);
+    stringtosearch := LowerCase(stringtosearch);
+  end;
+  Result := Pos(stringtofind, stringtosearch);
+end;
+
+function SearchText(
+    Control: TCustomEdit;
+    Search: string;
+    SearchOptions: TSearchOptions): Boolean;
+var
+  Text: string;
+  Index: Integer;
+  itext,ictext:Integer;
+begin
+  if soIgnoreCase in SearchOptions then
+  begin
+    Search := UpperCase(Search);
+    Text := UpperCase(Control.Text);
+  end
+  else
+    Text := Control.Text;
+
+    {$O-}
+   itext:= length(text);
+   ictext:=length(control.text);
+  Index := 0;
+  if not (soFromStart in SearchOptions) then
+    Index := PosEx(Search, Text, 
+         Control.SelStart + Control.SelLength + 1);
+
+  if (Index = 0) and
+      ((soFromStart in SearchOptions) or 
+       (soWrap in SearchOptions)) then
+    Index := PosEx(Search, Text, 1);
+
+  Result := Index > 0;
+  if Result then
+  begin
+    Control.SelStart := Index - 1;
+    Control.SelLength := Length(Search);
+  end;
+end;
+
+end.

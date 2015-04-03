@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2015/03/24 14:29:10.933.pas,C:\Users\m.gobran\Documents\RAD Studio\Projects\Unit12.pas=E:\Development\LogViewer\Sou\LogViewerMain.pas</Transaction>
+    <Transaction>2015/03/24 14:29:10.933.dfm,C:\Users\m.gobran\Documents\RAD Studio\Projects\Unit12.dfm=E:\Development\LogViewer\Sou\LogViewerMain.dfm</Transaction>
+    <Transaction>2015/03/24 14:29:28.116.dproj,C:\Users\m.gobran\Documents\RAD Studio\Projects\Project9.dproj=E:\Development\LogViewer\Sou\LogViewer.dproj</Transaction>
+    <Transaction>2015/04/04 00:22:55.993.pas,H:\LogViewer\Sou\Unit1.pas=H:\LogViewer\Sou\MemoSearch.pas</Transaction>
+    <Transaction>2015/04/04 00:22:55.993.dfm,H:\LogViewer\Sou\Unit1.dfm=H:\LogViewer\Sou\MemoSearch.dfm</Transaction>
+    <Transaction>2015/04/04 00:23:16.586.pas,H:\LogViewer\Sou\MemoSearch.pas=</Transaction>
+    <Transaction>2015/04/04 00:23:16.586.dfm,H:\LogViewer\Sou\MemoSearch.dfm=</Transaction>
+    <Transaction>2015/04/04 00:23:35.694.pas,H:\LogViewer\Sou\Unit2.pas=H:\LogViewer\Sou\MemoSearch.pas</Transaction>
+    <Transaction>2015/04/04 00:23:35.694.dfm,H:\LogViewer\Sou\Unit2.dfm=H:\LogViewer\Sou\MemoSearch.dfm</Transaction>
+  </Transactions>
+</BorlandProject>

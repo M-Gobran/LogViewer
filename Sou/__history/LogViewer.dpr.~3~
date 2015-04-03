@@ -1,0 +1,15 @@
+program LogViewer;
+
+uses
+  Forms,
+  LogViewerMain in 'LogViewerMain.pas' {Form12},
+  Unit1 in 'Unit1.pas' {Frame1: TFrame};
+
+{$R *.res}
+
+begin
+  Application.Initialize;
+  Application.MainFormOnTaskbar := True;
+  Application.CreateForm(TForm12, Form12);
+  Application.Run;
+end.

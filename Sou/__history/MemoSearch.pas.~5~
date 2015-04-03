@@ -1,0 +1,40 @@
+unit MemoSearch;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, Buttons;
+
+type
+  Tfrmsearch = class(TForm)
+    edtfind: TEdit;
+    Label1: TLabel;
+    btnfind: TBitBtn;
+    procedure FormActivate(Sender: TObject);
+    procedure btnfindClick(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  frmsearch: Tfrmsearch;
+
+implementation
+
+{$R *.dfm}
+
+procedure Tfrmsearch.btnfindClick(Sender: TObject);
+begin
+  SearchText(fcurrentmemo,FindDialog1.FindText,[]);
+
+end;
+
+procedure Tfrmsearch.FormActivate(Sender: TObject);
+begin
+edtfind.Text:='';
+end;
+
+end.
